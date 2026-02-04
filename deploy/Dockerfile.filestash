@@ -1,0 +1,24 @@
+# Base image using the latest official Filestash image
+FROM machines/filestash:latest
+
+# Expose the default Filestash port
+EXPOSE 8334
+
+# Set default environment variables for stateless operation
+# These can be overridden by the PaaS (Koyeb) environment variables
+ENV ONLY_PLUGINS=s3
+ENV APPLICATION_URL=""
+
+# S3 Configuration Defaults (Placeholder)
+# Real values should be injected via Deployment Secrets/Env Vars
+ENV S3_ENDPOINT=""
+ENV S3_REGION=""
+ENV S3_ACCESS_KEY_ID=""
+ENV S3_SECRET_ACCESS_KEY=""
+ENV S3_BUCKET=""
+
+# Enable/Disable other plugins to save memory
+ENV PLUGINS_BLACKLIST="dropbox,google_drive,webdav,mysql,ldap"
+
+# Health check
+HEALTHCHECK CMD curl -f http://localhost:8334/healthz || exit 1
