@@ -1,0 +1,52 @@
+{
+  "name": "telegram-documenter",
+  "version": "1.0.0",
+  "description": "Telegram Bot - Cloud Photo Storage & Documentation System",
+  "main": "dist/src/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && npm run prisma:generate",
+    "start": "node dist/src/index.js",
+    "dev": "tsx watch src/index.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "documentation",
+    "photo-upload",
+    "backblaze-b2"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "backblaze-b2": "^1.7.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "grammy": "^1.30.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.9.0",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.14.0",
+    "@typescript-eslint/parser": "^8.14.0",
+    "eslint": "^8.57.1",
+    "prettier": "^3.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

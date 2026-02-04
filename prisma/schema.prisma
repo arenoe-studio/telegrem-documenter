@@ -1,0 +1,171 @@
+// Prisma Schema for Telegram Documenter
+// Database: PostgreSQL (Supabase)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Admin Model
+// ============================================
+
+model Admin {
+  id             String   @id @default(uuid())
+  telegramUserId BigInt   @unique
+  username       String?
+  phoneNumber    String?
+  masterKey      String   // Encrypted (AES-256-GCM)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// ============================================
+// Session Model
+// ============================================
+
+model Session {
+  id             String        @id @default(uuid())
+  sessionId      String        @unique // PREFIX-MMDD-NN format
+  prefix         String
+  dateCode       String        // MMDD format
+  sequenceNumber String        // NN format
+  description    String
+  accessKey      String        // Encrypted (AES-256-GCM)
+  createdBy      BigInt        // Telegram User ID
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  status         SessionStatus @default(ACTIVE)
+  b2FolderPath   String?
+  totalFiles     Int           @default(0)
+  totalSizeMB    Decimal       @default(0) @db.Decimal(10, 2)
+
+  // Relations
+  uploads Upload[]
+
+  @@index([createdBy])
+  @@index([status])
+  @@index([dateCode])
+  @@map("sessions")
+}
+
+// ============================================
+// Upload Model
+// ============================================
+
+model Upload {
+  id           String       @id @default(uuid())
+  sessionId    String
+  filename     String
+  originalName String
+  fileSizeMB   Decimal      @db.Decimal(10, 2)
+  b2FileId     String?
+  b2FileUrl    String?
+  uploadStatus UploadStatus @default(PENDING)
+  uploadedBy   BigInt       // Telegram User ID
+  uploadedAt   DateTime     @default(now())
+  errorLog     String?
+  metadata     Json?        // EXIF data (for V1.1)
+  retryCount   Int          @default(0)
+
+  // Relations
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([uploadStatus])
+  @@index([uploadedBy])
+  @@map("uploads")
+}
+
+// ============================================
+// Session Lock Model (for failed attempts)
+// ============================================
+
+model SessionLock {
+  id           String   @id @default(uuid())
+  sessionId    String
+  telegramUserId BigInt
+  failedAttempts Int     @default(0)
+  lockedUntil  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([sessionId, telegramUserId])
+  @@map("session_locks")
+}
+
+// ============================================
+// User Session State Model (active session tracking)
+// ============================================
+
+model UserSessionState {
+  id             String   @id @default(uuid())
+  telegramUserId BigInt   @unique
+  activeSessionId String?
+  conversationState String? // For multi-step flows
+  stateData      Json?    // Additional state data
+  lastActivity   DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("user_session_states")
+}
+
+// ============================================
+// Enums
+// ============================================
+
+enum SessionStatus {
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+enum UploadStatus {
+  PENDING
+  UPLOADING
+  COMPLETED
+  FAILED
+  RETRYING
+}
+
+// ============================================
+// Reserved for V1.1: Google OAuth & Metadata
+// ============================================
+
+// model GoogleAuth {
+//   id             String   @id @default(uuid())
+//   telegramUserId BigInt   @unique
+//   googleEmail    String
+//   accessToken    String   // Encrypted
+//   refreshToken   String   // Encrypted
+//   tokenExpiry    DateTime
+//   sheetId        String?
+//   authorizedAt   DateTime @default(now())
+//   updatedAt      DateTime @updatedAt
+//
+//   @@map("google_auth")
+// }
+
+// model MetadataLog {
+//   id              String    @id @default(uuid())
+//   uploadId        String    @unique
+//   sessionId       String
+//   photoName       String
+//   dateTaken       DateTime?
+//   latitude        Decimal?  @db.Decimal(10, 7)
+//   longitude       Decimal?  @db.Decimal(10, 7)
+//   address         String?
+//   userDescription String?
+//   cloudLink       String
+//   sheetRowNumber  Int?
+//   createdAt       DateTime  @default(now())
+//
+//   @@map("metadata_logs")
+// }
