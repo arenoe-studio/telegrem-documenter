@@ -167,5 +167,20 @@ enum UploadStatus {
 //   sheetRowNumber  Int?
 //   createdAt       DateTime  @default(now())
 //
-//   @@map("metadata_logs")
-// }
+// ============================================
+// Error Log Model
+// ============================================
+
+model ErrorLog {
+  id        String   @id @default(uuid())
+  level     String   // ERROR, WARN
+  context   String?  // BOT, UPLOAD, B2, DB
+  message   String
+  stack     String?
+  userId    BigInt?
+  updateId  Int?
+  data      Json?
+  createdAt DateTime @default(now())
+  
+  @@map("error_logs")
+}

@@ -7,6 +7,7 @@ import { Bot, session, GrammyError, HttpError } from 'grammy';
 import type { Context, SessionFlavor } from 'grammy';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { errorBoundary } from './middlewares/error.middleware.js';
 
 // ============================================
 // Session Data Interface
@@ -75,31 +76,9 @@ export function createBot(): Bot<BotContext> {
     })
   );
 
+
   // Error handling
-  bot.catch((err) => {
-    const ctx = err.ctx;
-    const e = err.error;
-
-    logger.error(`Error while handling update ${ctx.update.update_id}:`, 'BOT');
-
-    if (e instanceof GrammyError) {
-      logger.error(`Error in request: ${e.description}`, 'GRAMMY', {
-        method: e.method,
-        payload: e.payload,
-      });
-    } else if (e instanceof HttpError) {
-      logger.error(`Could not contact Telegram: ${e.message}`, 'HTTP');
-    } else {
-      logger.error(`Unknown error: ${e}`, 'UNKNOWN');
-    }
-
-    // Try to notify user of error
-    ctx
-      .reply('❌ Terjadi kesalahan. Silakan coba lagi atau gunakan /refresh.')
-      .catch(() => {
-        // Ignore if we can't send the error message
-      });
-  });
+  bot.catch(errorBoundary);
 
   logger.bot('Bot instance created');
 
